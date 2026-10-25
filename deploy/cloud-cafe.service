@@ -1,0 +1,25 @@
+[Unit]
+Description=Cloud Cafe Gunicorn web application
+After=network.target
+
+[Service]
+Type=simple
+User=cloud-cafe
+Group=cloud-cafe
+WorkingDirectory=/opt/cloud-cafe
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=FLASK_DEBUG=0
+EnvironmentFile=/etc/cloud-cafe.env
+ExecStart=/opt/cloud-cafe/.venv/bin/gunicorn --bind 0.0.0.0:8080 --workers 2 --worker-class sync --timeout 30 --access-logfile - --error-logfile - app:app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

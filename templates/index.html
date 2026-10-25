@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Welcome to Cloud Café. Discover a comforting cup of coffee, a lovely tea, or a little something sweet.">
+  <title>Cloud Café — A little pause, a lovely brew</title>
+  <link rel="icon" href="{{ url_for('static', filename='cafe.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#menu">Skip to menu</a>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-coffee" viewBox="0 0 64 64">
+      <path d="M15 25h31v13a15 15 0 0 1-31 0Z"/><path d="M46 28h4a7 7 0 0 1 0 14h-5M12 55h38M23 17c-6-5 5-7 0-12M35 17c-6-5 5-7 0-12"/>
+    </symbol>
+    <symbol id="icon-tea" viewBox="0 0 64 64">
+      <path d="M12 29h34v10a16 16 0 0 1-32 0ZM46 32h3a7 7 0 0 1 0 14h-5M12 57h38M31 26C15 24 17 10 17 10s18-2 14 16Zm0 0C29 10 45 7 45 7s5 15-14 19Z"/>
+    </symbol>
+    <symbol id="icon-snacks" viewBox="0 0 64 64">
+      <path d="M52 26a10 10 0 0 1-14-14 23 23 0 1 0 14 14Z"/><path d="M22 25h1M18 39h1M31 35h1M30 49h1M43 42h1" class="crumbs"/>
+    </symbol>
+  </svg>
+  <header class="site-header page-width">
+    <a class="brand" href="/" aria-label="Cloud Café home">
+      <img src="{{ url_for('static', filename='cafe.svg') }}" width="40" height="40" alt="">
+      <span>Cloud Café<span class="brand-dot">.</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#menu">Our menu</a>
+      <a href="#deployment">Behind the brew <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main class="page-width">
+    <section class="hero" aria-labelledby="welcome-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="little-spark" aria-hidden="true">✳</span> YOUR EVERYDAY LITTLE ESCAPE</p>
+        <h1 id="welcome-title">A little pause.<br>A lovely <em>brew.</em></h1>
+        <p class="intro">Welcome to Cloud Café. Good coffee, comforting tea, and a little something sweet. Make yourself at home.</p>
+        <a class="primary-button" href="#menu">Find your favorite <span aria-hidden="true">↓</span></a>
+        <p class="hero-note">Freshly brewed. Served from the cloud.</p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-label">THE CLOUD CAFÉ BLEND</div>
+        <span class="art-star star-one">✳</span><span class="art-star star-two">✦</span>
+        <div class="steam steam-one"></div><div class="steam steam-two"></div><div class="steam steam-three"></div>
+        <div class="saucer"></div>
+        <div class="cup-handle"></div>
+        <div class="cup"><div class="coffee-surface"><div class="foam-heart">♥</div></div><span class="cup-wordmark">cloud café</span></div>
+        <div class="art-caption">a cup of<br><em>something good.</em></div>
+        <span class="coffee-bean bean-one"></span><span class="coffee-bean bean-two"></span>
+      </div>
+    </section>
+
+    <section id="menu" class="menu-section" aria-labelledby="menu-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">MADE FOR YOUR KIND OF DAY</p><h2 id="menu-title">The café menu</h2></div>
+        <p>Little comforts, by the cup and by the bite.</p>
+      </div>
+      <div class="menu-toolbar">
+        <div class="filters" role="group" aria-label="Filter menu by category" hidden>
+          {% for category in ['All', 'Coffee', 'Tea', 'Snacks'] %}
+          <button type="button" class="filter-button{% if category == 'All' %} active{% endif %}" data-filter="{{ category }}" aria-pressed="{{ 'true' if category == 'All' else 'false' }}" aria-controls="menu-grid">{{ category }}</button>
+          {% endfor %}
+        </div>
+        <p id="menu-count" class="menu-count" role="status" aria-live="polite" aria-atomic="true">8 items · All prices in USD</p>
+      </div>
+      <noscript><p class="no-script">All eight items are shown below. Turn on JavaScript to filter by category.</p></noscript>
+      <div id="menu-grid" class="menu-grid">
+        {% for item in menu %}
+        <article class="menu-card {{ item.category|lower }}" data-category="{{ item.category }}">
+          <div class="card-top"><span class="product-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><use href="#icon-{{ item.category|lower }}"></use></svg></span><span class="category-label">{{ item.category }}</span></div>
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.description }}</p>
+          <div class="card-bottom"><span class="price">${{ '%.2f'|format(item.price) }}</span><span class="price-currency">USD</span></div>
+        </article>
+        {% endfor %}
+      </div>
+      <p class="menu-footnote">A sample menu for learning. No ordering needed — just a little curiosity.</p>
+    </section>
+
+    <section id="deployment" class="deployment-panel" aria-labelledby="deployment-title">
+      <div class="deployment-intro"><p class="eyebrow">BEHIND THE BREW</p><h2 id="deployment-title">Deployment information</h2><p>This identifies the server that answered your request.</p></div>
+      <div class="deployment-details"><dl><div><dt><span class="server-dot" aria-hidden="true"></span> Served by</dt><dd id="server-name">{{ server_name }}</dd></div><div><dt>Application version</dt><dd id="app-version">{{ app_version }}</dd></div></dl>
+        <form action="{{ url_for('home') }}" method="get"><button class="reload-button" type="submit"><span aria-hidden="true">↻</span> Reload page</button></form>
+        <p class="reload-note">Each reload requests the page again. It may reach the same server.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="page-width"><span class="footer-brand">Cloud Café<span class="brand-dot">.</span></span><p>A small café. A warm welcome. A place to learn.</p><span>BREWED IN THE CLOUD</span></footer>
+</body>
+</html>
