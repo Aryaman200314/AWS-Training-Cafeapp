@@ -36,7 +36,7 @@ def build_script():
     encoded = base64.b64encode(gzip.compress(archive.getvalue(), mtime=0)).decode("ascii")
     payload = "\n".join(textwrap.wrap(encoded, width=76))
     script = f"""#!/bin/bash
-# Cloud Cafe standalone user data for Ubuntu 22.04 LTS.
+# Cloud Cafe standalone user data for Ubuntu 22.04 or 26.04 LTS.
 # Generated from project files by tools/build_user_data.py; do not edit the payload.
 # No repository or AWS credentials needed. Package installation needs internet.
 set -euo pipefail

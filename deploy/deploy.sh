@@ -8,8 +8,8 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 . /etc/os-release
-if [[ "$ID" != ubuntu || "$VERSION_ID" != 22.04 ]]; then
-    echo "This installer targets Ubuntu 22.04 LTS." >&2
+if [[ "$ID" != ubuntu || ( "$VERSION_ID" != 22.04 && "$VERSION_ID" != 26.04 ) ]]; then
+    echo "This installer targets Ubuntu 22.04 or 26.04 LTS; detected ${PRETTY_NAME:-$ID $VERSION_ID}." >&2
     exit 1
 fi
 

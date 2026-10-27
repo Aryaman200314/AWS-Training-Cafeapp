@@ -1,6 +1,6 @@
 # Cloud Café verification
 
-Verified on **24 October 2026** in the supplied Windows workspace.
+Initial application and browser verification: **24 October 2026** in the supplied Windows workspace. Installer update and checks: **25 October 2026**.
 
 ## Checks actually run
 
@@ -31,16 +31,27 @@ Verified on **24 October 2026** in the supplied Windows workspace.
 | Bash syntax | `bash -n` passed for `deploy/deploy.sh` and `deploy/user-data.sh`, using Git Bash. |
 | JavaScript syntax | Node's syntax checks passed for the application script and browser test. |
 | User-data synchronization | All **9 embedded deployable files** matched their source contents byte for byte after LF normalization. |
-| User-data size | **12,622 bytes**, below the **16,384-byte** raw EC2 limit. The script begins with `#!/bin/bash` and uses LF line endings. |
+| User-data size | **12,691 bytes** after the Ubuntu 26.04 update, below the **16,384-byte** raw EC2 limit. The script begins with `#!/bin/bash` and uses LF line endings. |
 | Delivery archives | ZIP and tar.gz contents checked against the project; neither includes the local Python environment or verification tools. |
 
 Final application tests used **CPython 3.10.11**, **Flask 3.1.3**, and **Chrome 155.0.8059.86**. Earlier checks also passed on Python 3.10.22. Runtime package versions are pinned in `requirements.txt`.
 
 The built-in browser tool could not start. Browser verification instead used a temporary Playwright installation with the machine's installed Google Chrome. These tools are not application dependencies. Screenshots are in `.tools/browser-results/` in the original workspace.
 
+## Ubuntu 26.04 installer update — 25 October 2026
+
+- The user's EC2 screenshot identified Ubuntu 26.04.1 LTS. The previous installer intentionally accepted only Ubuntu 22.04, which caused the reported stop.
+- The installer now accepts Ubuntu 22.04 and 26.04 and includes the detected operating system in its error message for other versions.
+- The pinned packages resolved for Linux **Python 3.14**, on both **x86-64 and ARM64**, without changing any package version.
+- The actual Bash version guard was exercised separately: Ubuntu 22.04 and 26.04 passed; Ubuntu 20.04 and Debian were rejected. No installation commands were executed by these guard checks.
+- The copy-and-paste `sed` repair for the user's old checkout was tested: it produces the same version condition as the updated installer and does not add another change when repeated.
+- All **13 Python tests** passed again, and both Bash scripts passed syntax checks. User data and both delivery archives were rebuilt and checked against the final project files.
+- Application and interface code did not change. Browser results above are from 24 October; browser tests were not repeated for this installer-only change.
+- This is **not a completed Ubuntu 26.04 deployment test**; Python 3.14 dependency resolution is distinct from running the service on Linux.
+
 ## Not verified in this environment
 
-- No Ubuntu machine or WSL environment was available. The installer was syntax-checked and reviewed, but **not executed on fresh Ubuntu 22.04**.
+- No Ubuntu machine or WSL environment was available. The installer was syntax-checked and reviewed, but **not executed on fresh Ubuntu 22.04 or 26.04**.
 - Gunicorn was downloaded and its Python compatibility checked, but **not run on Linux**. It does not run natively on Windows.
 - systemd startup, execution as the dedicated service user, repeated full installations, and automatic startup after a real reboot were **not exercised**.
 - No live EC2 instance, launch template, ALB, target group, or ASG was created or modified. AWS networking, cloud-init first boot, real target health, load distribution, and instance replacement were **not exercised**.

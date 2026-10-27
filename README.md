@@ -1,6 +1,6 @@
 # Cloud Café
 
-A friendly café menu for Alain's beginner AWS lessons. The application uses Python and Flask, local HTML and CSS, and a small JavaScript file. It runs on a laptop and is prepared for Ubuntu 22.04 LTS on EC2.
+A friendly café menu for Alain's beginner AWS lessons. The application uses Python and Flask, local HTML and CSS, and a small JavaScript file. It runs on a laptop and is prepared for Ubuntu 22.04 or 26.04 LTS on EC2. The installer accepts both versions; full Ubuntu deployment still needs rehearsal (see `VERIFICATION.md`).
 
 There are eight sample items: three coffees, two teas, and three snacks. The category buttons filter the menu without loading another page. Prices are in US dollars (USD). The **Deployment information** panel shows which server answered the request and the application version.
 
@@ -17,7 +17,7 @@ There is **no database**, login, checkout, payment processing, or order storage.
 | `static/script.js` | Shows or hides cards when a category button is pressed. |
 | `static/cafe.svg` | Local café logo and browser icon. No image service is used. |
 | `requirements.txt` | Exact versions of Flask, Gunicorn, and their supporting packages. Gunicorn is skipped on Windows. |
-| `deploy/deploy.sh` | Installs the application on an existing Ubuntu 22.04 instance. Run with `sudo`. |
+| `deploy/deploy.sh` | Installs the application on an existing Ubuntu 22.04 or 26.04 instance. Run with `sudo`. |
 | `deploy/cloud-cafe.service` | Instructions for systemd, Ubuntu's background service manager. |
 | `deploy/user-data.sh` | Complete standalone installer to paste into an EC2 launch template. |
 | `tools/build_user_data.py` | Rebuilds the standalone script directly from the project files and checks its size. |
@@ -57,7 +57,7 @@ Set-Location 'D:\AWS-Training\Applicaion day 08'
 
 Open **http://127.0.0.1:8080** in your browser. `127.0.0.1` means this computer. Stop the local server with **Ctrl+C** in its terminal. The local server is for learning and previewing. EC2 uses Gunicorn, a server that runs the Flask application as a managed background process. Gunicorn runs on Unix systems, so Windows uses Flask for local preview. [Flask's Gunicorn guide](https://flask.palletsprojects.com/en/stable/deploying/gunicorn/)
 
-## 3. Run locally on Ubuntu 22.04
+## 3. Run locally on Ubuntu 22.04 or 26.04
 
 In the folder containing `app.py`:
 
@@ -148,7 +148,7 @@ The file accepts lines such as `APP_VERSION=1.1` and `SERVER_NAME=Alain-demo`. *
 
 These are rehearsal instructions for you to carry out. This project does not create or modify AWS resources.
 
-1. Use an **Ubuntu Server 22.04 LTS** EC2 instance. An EC2 instance is a virtual computer. For the simple direct-access exercise, it needs a public IPv4 address and a subnet with an internet gateway route.
+1. Use an **Ubuntu Server 22.04 or 26.04 LTS** EC2 instance. An EC2 instance is a virtual computer. For the simple direct-access exercise, it needs a public IPv4 address and a subnet with an internet gateway route.
 2. Its **security group** (AWS's network firewall rules) should allow TCP **8080 from your own public IP**, and TCP **22 from your own public IP** if you use SSH. SSH is a secure terminal connection. Keep this direct-access rule separate from the later ALB exercise.
 3. Package installation needs **outbound internet access**, DNS resolution, and access to Ubuntu package mirrors and PyPI over HTTP/HTTPS. A public instance needs a public IP and internet gateway route; a private instance needs an outbound route such as a NAT gateway. An ALB does not provide outbound internet access to instances.
 4. Copy `cloud-cafe.tar.gz` to the instance and connect using the commands below.
@@ -168,6 +168,17 @@ tar -xzf ~/cloud-cafe.tar.gz -C ~/cloud-cafe
 cd ~/cloud-cafe
 sudo bash deploy/deploy.sh
 ```
+
+If the project is already extracted or cloned on your instance, skip the copy and extraction steps. For example:
+
+```bash
+cd ~/app/AWS-Training-Cafeapp
+sudo bash deploy/deploy.sh
+```
+
+Running `sudo bash` does not require the script's executable permission bit. There is no need to use `chmod 777`; if you previously did, restore ordinary script permissions with `chmod 755 deploy/deploy.sh`.
+
+Ubuntu 26.04 uses Python 3.14. The pinned dependencies have been resolved for Linux Python 3.14 on x86-64 and ARM64, but a full Ubuntu 26.04 deployment has not been run in the authoring environment. [Ubuntu 26.04 development changes](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/)
 
 The installer:
 
@@ -221,7 +232,7 @@ sudo ss -ltnp 'sport = :8080'
 A **launch template** saves settings for new EC2 instances. **User data** is a startup script that Ubuntu's cloud-init service runs as root on an instance's first boot. By default, user data does not run on every reboot; the enabled systemd service handles later starts. EC2 limits raw user data to 16 KiB before its transport encoding. [AWS user-data guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
 
 1. Open `deploy/user-data.sh` in a text editor and copy the **whole file**, beginning with `#!/bin/bash`.
-2. In the launch template, choose Ubuntu 22.04 LTS and an instance type compatible with that AMI. Use the EC2 security group described in the next section.
+2. In the launch template, choose Ubuntu 22.04 or 26.04 LTS and an instance type compatible with that AMI. Use the EC2 security group described in the next section.
 3. Under **Advanced details → User data**, paste the file as ordinary text. **Do not select the option saying that the entire user data is already base64 encoded.** The compressed text inside the script is an internal payload, not the encoding of the whole script.
 4. Save the launch template version. Launch a test instance from that version and allow several minutes for package installation.
 5. Check the application or the target group's health status. The installer needs no manual SSH steps, repository URL, AWS credentials, or database.
@@ -313,7 +324,8 @@ Changing a launch template does not rewrite applications on existing instances. 
 | Service will not start | Read `sudo journalctl -u cloud-cafe -n 80 --no-pager`. Check `/opt/cloud-cafe/app.py`, `/opt/cloud-cafe/.venv/bin/gunicorn`, and `/etc/cloud-cafe.env`. Rerun the installer from the uploaded source folder if installation did not finish. |
 | Port already in use | Run `sudo ss -ltnp 'sport = :8080'`. Stop a local preview with Ctrl+C before starting the managed service on that machine. |
 | Missing Python package | Run `sudo /opt/cloud-cafe/.venv/bin/python -m pip check`. Fix package-download access, then rerun the installer. Do not install application packages into Ubuntu's system Python. |
-| User-data install failed | Check `/var/log/cloud-init-output.log`. Check Ubuntu 22.04, outbound routing, public IP or NAT as appropriate, DNS, and HTTP/HTTPS egress. An ALB is not an outbound gateway. |
+| Installer rejects Ubuntu 26.04 | An older copy only accepted 22.04. Use the updated installer and regenerate user data after any deployment-script change. Confirm the version with `cat /etc/os-release`. |
+| User-data install failed | Check `/var/log/cloud-init-output.log`. Check Ubuntu 22.04 or 26.04, outbound routing, public IP or NAT as appropriate, DNS, and HTTP/HTTPS egress. An ALB is not an outbound gateway. |
 | `bash\r` or `$'\r'` errors | A shell script was saved with Windows line endings. Save it as UTF-8 with LF endings, or run `sed -i 's/\r$//' deploy/deploy.sh`, then retry. The supplied scripts use LF. |
 | Browser cannot reach the single instance | Confirm service status and local `/health`, then check the public IP, port 8080 inbound rule from your IP, and subnet route. Use `http://PUBLIC_IP:8080`. |
 | ALB target is unhealthy | Start with `curl -i http://127.0.0.1:8080/health` on the instance. Confirm HTTP, port 8080, path `/health`, and success code 200. Check the target-health reason in the EC2 console. |
